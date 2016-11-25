@@ -9,6 +9,16 @@ function GameWrapper(){
   window.ctx = ctx; // todo debug
   canvas.height = height;
   canvas.width = width;
+  var playX = 0;
+  var playY = 0;
+  var playWidth = width;
+  var playHeight = height;
+  var boundX = playX + 100;
+  var boundY = playY + 100;
+  var boundWidth = playWidth - 200;
+  var boundHeight = playHeight - 200;
+  var backgroundColor = "#111111";
+  var loopDelay = 0;
 
   self.KEYS = {
     MX: 'MOUSE_X',
@@ -28,6 +38,9 @@ function GameWrapper(){
   self.sendInput = function(key, value){
     currentInput[key] = value;
   }
+  self.setDelay = function(delay){
+    loopDelay = delay;
+  }
 
   function Entity(){
     return {
@@ -35,27 +48,51 @@ function GameWrapper(){
       y: 0,
       dx: 0,
       dy: 0,
+      size: 20,
+      step: 5,
+      color: undefined,
+      fill: undefined,
     };
   }
 
   var hero = Entity();
   hero.x = 100;
   hero.y = 100;
-  hero.size = 20;
-  hero.step = 5;
+  hero.color = "red";
   var hero2 = Entity();
   hero2.x = 200;
   hero2.y = 200;
-  hero2.size = hero.size;
-  hero2.step = hero.step;
+  hero2.color = "blue";
   var mouse = Entity();
-  mouse.size = hero.size;
-  function drawHero(hero, color){
-    ctx.fillStyle = color;
+  mouse.color = "green";
+  var puck = Entity();
+  puck.tx = playWidth/2;
+  puck.ty = playHeight/2;
+  puck.dx = 2;
+  puck.dy = 2;
+  puck.size = 15;
+  // puck.color = "gold";
+  puck.fill = "#333333";
+
+  function rgbToHex(r, g, b){
+    // http://stackoverflow.com/a/6736135/6461842
+    if (r > 255 || g > 255 || b > 255)
+      throw "Invalid color component";
+    var number = ((r << 16) | (g << 8) | b).toString(16);
+    return "#" + ("000000" + number).slice(-6);
+  }
+  function drawDisc(disc){
     ctx.beginPath();
-    ctx.arc(hero.x,hero.y,hero.size,0,2*Math.PI);
-    ctx.arc(hero.x,hero.y,hero.size-5,0,2*Math.PI);
-    ctx.fill("evenodd");
+    ctx.arc(disc.x,disc.y,disc.size,0,2*Math.PI);
+    ctx.arc(disc.x,disc.y,disc.size-5,0,2*Math.PI);
+    if (disc.fill){
+      ctx.fillStyle = disc.fill;
+      ctx.fill();
+    }
+    if (disc.color){
+      ctx.fillStyle = disc.color;
+      ctx.fill("evenodd");
+    }
   }
   function drawLink(a, b){
     ctx.strokeStyle = "#DDDDDD";
@@ -67,37 +104,42 @@ function GameWrapper(){
     ctx.stroke();
   }
   function drawTriangle(a, b, c, fill){
-    ctx.fillStyle = fill;
-    ctx.strokeStyle = "#DDDDDD";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
     ctx.lineTo(c.x, c.y);
     ctx.lineTo(a.x, a.y);
+    ctx.fillStyle = fill;
     ctx.fill();
+
+    var pixel = ctx.getImageData(puck.x, puck.y, 1, 1).data;
+    var color = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+    ctx.strokeStyle = "#DDDDDD";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
     ctx.stroke();
+
+    return color;
   }
   function drawAll(){
     var area = calcArea();
-    var max = 90000;
+    var max = 120000;
+    var min = 20000;
     if (area > max) {
       area = max;
+    } else if (area < min){
+      area = min;
     }
-    var grad = "" + Math.floor(100 * (1 - area / max));
-    if (grad.length == 1){
-      grad = "0" + grad;
-    }
-    var color = "#" + grad + grad + grad;
+    var grad = Math.floor(200 * (1 - ((area - min) / (max - min))));
+    var color = rgbToHex(grad, grad, grad);
 
-    drawTriangle(hero, hero2, mouse, color);
-    drawHero(hero, "red");
-    drawHero(hero2, "blue");
-    drawHero(mouse, "green");
-    // drawLink(hero, hero2);
-    // drawLink(mouse, hero);
-    // drawLink(mouse, hero2);
+    var puckColor = drawTriangle(hero, hero2, mouse, color);
+    drawDisc(hero);
+    drawDisc(hero2);
+    drawDisc(mouse);
+    drawDisc(puck);
+    return puckColor;
   }
 
   function calcDist(a, b){
@@ -108,61 +150,100 @@ function GameWrapper(){
     var e2 = calcDist(mouse, hero);
     var e3 = calcDist(mouse, hero2);
     var s = (e1 + e2 + e3)/2.0;
-    return Math.sqrt(s * (s - e1) * (s - e2) * (s - e3));
+    return Math.floor(Math.sqrt(s * (s - e1) * (s - e2) * (s - e3)));
   }
-  function drawArea(){
+  function drawStats(puckColor){
     var area = calcArea();
     ctx.fillStyle = "white";
-    ctx.fillText(area, 50, 50);
-  }
-  self.drawDelay = function(delay){
-    ctx.fillStyle = "white";
-    ctx.fillText(delay, 50, 40);
+    ctx.fillText(loopDelay, 10, 40);
+    ctx.fillText(area, 10, 50);
+    ctx.fillText(puckColor > puck.fill, 10, 60);
   }
 
   function clearCanvas(){
-    ctx.fillStyle = "#111111";
+    ctx.fillStyle = backgroundColor;
     ctx.fillRect(
-      0, 0, 
-      width, height
+      playX, playY,
+      playWidth, playHeight
     );
   };
 
   function handleInput(){
+    var minX = playX;
+    var minY = playY;
+    var maxX = minX + playWidth;
+    var maxY = minY + playHeight;
+
     mouse.x = currentInput[self.KEYS.MX];
     mouse.y = currentInput[self.KEYS.MY];
-    if (currentInput[self.KEYS.UP] && hero.y - hero.size > 0){
+    if (currentInput[self.KEYS.UP] && hero.y - hero.size > minY){
       hero.y -= hero.step;
     }
-    if (currentInput[self.KEYS.DOWN] && hero.y + hero.size < height){
+    if (currentInput[self.KEYS.DOWN] && hero.y + hero.size < maxY){
       hero.y += hero.step;
     }
-    if (currentInput[self.KEYS.LEFT] && hero.x - hero.size > 0){
+    if (currentInput[self.KEYS.LEFT] && hero.x - hero.size > minX){
       hero.x -= hero.step;
     }
-    if (currentInput[self.KEYS.RIGHT] && hero.x + hero.size < width){
+    if (currentInput[self.KEYS.RIGHT] && hero.x + hero.size < maxX){
       hero.x += hero.step;
     }
 
-    if (currentInput[self.KEYS.UP2] && hero2.y - hero2.size > 0){
+    if (currentInput[self.KEYS.UP2] && hero2.y - hero2.size > minY){
       hero2.y -= hero2.step;
     }
-    if (currentInput[self.KEYS.DOWN2] && hero2.y + hero2.size < height){
+    if (currentInput[self.KEYS.DOWN2] && hero2.y + hero2.size < maxY){
       hero2.y += hero2.step;
     }
-    if (currentInput[self.KEYS.LEFT2] && hero2.x - hero2.size > 0){
+    if (currentInput[self.KEYS.LEFT2] && hero2.x - hero2.size > minX){
       hero2.x -= hero2.step;
     }
-    if (currentInput[self.KEYS.RIGHT2] && hero2.x + hero2.size < width){
+    if (currentInput[self.KEYS.RIGHT2] && hero2.x + hero2.size < maxX){
       hero2.x += hero2.step;
+    }
+  }
+
+  function movePuck(){
+    puck.tx += puck.dx;
+    puck.ty += puck.dy;
+    puck.x = Math.floor(puck.tx);
+    puck.y = Math.floor(puck.ty);
+
+    var minX = boundX;
+    var minY = boundY;
+    var maxX = minX + boundWidth;
+    var maxY = minY + boundHeight;
+    var changed = false;
+
+    if (puck.x < minX || puck.x > maxX){
+      puck.dx *= -1;
+      changed = true;
+    }
+    if (puck.y < minY || puck.y > maxY){
+      puck.dy *= -1;
+      changed = true;
+    }
+    if (!changed){
+      if (Math.random() * 30 <= 1){
+        var change = Math.random() * 2;
+        if (Math.random() * 2 <= 1){
+          change *= -1;
+        }
+        if (Math.random() * 2 <= 1){
+          puck.dx += change;
+        } else {
+          puck.dy += change;
+        }
+      }
     }
   }
 
   self.step = function(){
     clearCanvas();
     handleInput();
-    drawAll();
-    drawArea();
+    movePuck();
+    var puckColor = drawAll();
+    drawStats(puckColor);
   }
 
   return self;

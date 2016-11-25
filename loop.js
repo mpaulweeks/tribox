@@ -14,7 +14,7 @@ function GameLoop(gameWrapper){
     var end = new Date();
     var msElapsed = end - start;
     var delay = TIMEOUT_TARGET - msElapsed;
-    gameWrapper.drawDelay(delay);
+    gameWrapper.setDelay(delay);
     if (delay < 1){
       delay = 1;
     }
