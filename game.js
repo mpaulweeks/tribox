@@ -163,13 +163,12 @@ function GameWrapper(){
     }
   }
 
-  self.ctx = ctx;
-  self.playBox = playBox;
-  self.hero = hero;
-  self.hero2 = hero2;
-  self.mouse = mouse;
-  self.puck = puck;
-  var gameView = GameView(self);
+  var gameView = GameView({
+    ctx: ctx,
+    playBox: playBox,
+    discs: [hero, hero2, mouse],
+    puck: puck,
+  });
 
   self.step = function(){
     var puckColor = gameView.drawSpace();

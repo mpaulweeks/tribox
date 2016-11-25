@@ -1,11 +1,9 @@
-function GameView(gameWrapper){
+function GameView(viewData){
 
-  var ctx = gameWrapper.ctx;
-  var playBox = gameWrapper.playBox;
-  var hero = gameWrapper.hero;
-  var hero2 = gameWrapper.hero2;
-  var mouse = gameWrapper.mouse;
-  var puck = gameWrapper.puck;
+  var ctx = viewData.ctx;
+  var playBox = viewData.playBox;
+  var discs = viewData.discs;
+  var puck = viewData.puck;
 
   var backgroundColor = "#111111";
 
@@ -70,10 +68,8 @@ function GameView(gameWrapper){
     var grad = Math.floor(200 * (1 - ((area - min) / (max - min))));
     var color = rgbToHex(grad, grad, grad);
 
-    var puckColor = drawTriangle(hero, hero2, mouse, color);
-    drawDisc(hero);
-    drawDisc(hero2);
-    drawDisc(mouse);
+    var puckColor = drawTriangle(discs[0], discs[1], discs[2], color);
+    discs.forEach(drawDisc);
     drawDisc(puck);
     return puckColor;
   }
@@ -82,9 +78,9 @@ function GameView(gameWrapper){
     return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)); 
   }
   function calcArea(){
-    var e1 = calcDist(hero, hero2);
-    var e2 = calcDist(mouse, hero);
-    var e3 = calcDist(mouse, hero2);
+    var e1 = calcDist(discs[0], discs[1]);
+    var e2 = calcDist(discs[1], discs[2]);
+    var e3 = calcDist(discs[2], discs[0]);
     var s = (e1 + e2 + e3)/2.0;
     return Math.floor(Math.sqrt(s * (s - e1) * (s - e2) * (s - e3)));
   }
