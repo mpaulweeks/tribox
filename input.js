@@ -7,22 +7,38 @@ function InputListener(gameWrapper){
     var k = gameWrapper.KEYS;
 
     var pressed = null;
-    if (code == 38 || code == 87){ // up/W
+    if (code == 38){ // up
+      pressed = k.UP2;
+    } else if (code == 40){ // down
+      pressed = k.DOWN2;
+    } else if (code == 37){ // left
+      pressed = k.LEFT2;
+    } else if (code == 39){ // right
+      pressed = k.RIGHT2;
+    } else if (code == 87){ // W
       pressed = k.UP;
-    } else if (code == 40 || code == 83){ // down/S
+    } else if (code == 83){ // S
       pressed = k.DOWN;
-    } else if (code == 37 || code == 65){ // left/A
+    } else if (code == 65){ // A
       pressed = k.LEFT;
-    } else if (code == 39 || code == 68){ // right/D
+    } else if (code == 68){ // D
       pressed = k.RIGHT;
     } else if (code == 73){ // I
-      pressed = k.UP2;
+      gameWrapper.sendInput(k.UP, value);
+      gameWrapper.sendInput(k.UP2, value);
+      gameWrapper.sendInput(k.UP3, value);
     } else if (code == 75){ // K
-      pressed = k.DOWN2;
+      gameWrapper.sendInput(k.DOWN, value);
+      gameWrapper.sendInput(k.DOWN2, value);
+      gameWrapper.sendInput(k.DOWN3, value);
     } else if (code == 74){ // J
-      pressed = k.LEFT2;
+      gameWrapper.sendInput(k.LEFT, value);
+      gameWrapper.sendInput(k.LEFT2, value);
+      gameWrapper.sendInput(k.LEFT3, value);
     } else if (code == 76){ // L
-      pressed = k.RIGHT2;
+      gameWrapper.sendInput(k.RIGHT, value);
+      gameWrapper.sendInput(k.RIGHT2, value);
+      gameWrapper.sendInput(k.RIGHT3, value);
     } else if (code == 67){ // C
 
     } else if (code == 82){ // R

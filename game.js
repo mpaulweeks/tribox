@@ -32,10 +32,14 @@ function GameWrapper(){
     DOWN2: 'DOWN2',
     LEFT2: 'LEFT2',
     RIGHT2: 'RIGHT2',
+    UP3: 'UP3',
+    DOWN3: 'DOWN3',
+    LEFT3: 'LEFT3',
+    RIGHT3: 'RIGHT3',
   }
   var currentInput = {};
-  currentInput[self.KEYS.MX] = 1;
-  currentInput[self.KEYS.MY] = 1;
+  currentInput[self.KEYS.MX] = 500;
+  currentInput[self.KEYS.MY] = 100;
   self.sendInput = function(key, value){
     currentInput[key] = value;
   }
@@ -61,8 +65,8 @@ function GameWrapper(){
   hero.y = 100;
   hero.color = "red";
   var hero2 = Entity();
-  hero2.x = 200;
-  hero2.y = 200;
+  hero2.x = 300;
+  hero2.y = 300;
   hero2.color = "blue";
   var mouse = Entity();
   mouse.color = "green";
@@ -107,6 +111,20 @@ function GameWrapper(){
     }
     if (currentInput[self.KEYS.RIGHT2] && hero2.x + hero2.size < maxX){
       hero2.x += hero2.step;
+    }
+
+    // debug
+    if (currentInput[self.KEYS.UP3] && mouse.y - mouse.size > minY){
+      currentInput[self.KEYS.MY] -= mouse.step;
+    }
+    if (currentInput[self.KEYS.DOWN3] && mouse.y + mouse.size < maxY){
+      currentInput[self.KEYS.MY] += mouse.step;
+    }
+    if (currentInput[self.KEYS.LEFT3] && mouse.x - mouse.size > minX){
+      currentInput[self.KEYS.MX] -= mouse.step;
+    }
+    if (currentInput[self.KEYS.RIGHT3] && mouse.x + mouse.size < maxX){
+      currentInput[self.KEYS.MX] += mouse.step;
     }
   }
 
