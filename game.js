@@ -69,20 +69,21 @@ function GameWrapper(){
   var puck = Entity();
   puck.tx = playBox.width/2;
   puck.ty = playBox.height/2;
-  puck.dx = 2;
-  puck.dy = 2;
+  puck.dx = 0.3;
+  puck.dy = 0.2;
   puck.size = 15;
   // puck.color = "gold";
   puck.fill = "#333333";
 
   function handleInput(){
+    mouse.x = currentInput[self.KEYS.MX];
+    mouse.y = currentInput[self.KEYS.MY];
+
     var minX = playBox.x;
     var minY = playBox.y;
     var maxX = minX + playBox.width;
     var maxY = minY + playBox.height;
 
-    mouse.x = currentInput[self.KEYS.MX];
-    mouse.y = currentInput[self.KEYS.MY];
     if (currentInput[self.KEYS.UP] && hero.y - hero.size > minY){
       hero.y -= hero.step;
     }
@@ -154,11 +155,17 @@ function GameWrapper(){
   var gameView = GameView(self);
 
   self.step = function(){
-    handleInput();
-    movePuck();
     var puckColor = gameView.drawSpace();
-    gameView.drawStats(puckColor, loopDelay);
+    var puckInBounds = puckColor > puck.fill;
+    handleInput();
+    if (puckInBounds){
+      movePuck();
+    }
+    gameView.drawStats(puckInBounds, loopDelay);
   }
+
+  // init
+  movePuck();
 
   return self;
 }

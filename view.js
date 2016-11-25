@@ -88,12 +88,12 @@ function GameView(gameWrapper){
     var s = (e1 + e2 + e3)/2.0;
     return Math.floor(Math.sqrt(s * (s - e1) * (s - e2) * (s - e3)));
   }
-  function drawStats(puckColor, loopDelay){
+  function drawStats(puckInBounds, loopDelay){
     var area = calcArea();
     ctx.fillStyle = "white";
     ctx.fillText(loopDelay, 10, 20);
     ctx.fillText(area, 10, 30);
-    ctx.fillText(puckColor > puck.fill, 10, 40);
+    ctx.fillText(puckInBounds > puck.fill, 10, 40);
   }
   function clearCanvas(){
     ctx.fillStyle = backgroundColor;
