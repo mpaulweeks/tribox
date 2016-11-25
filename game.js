@@ -72,7 +72,6 @@ function GameWrapper(){
   puck.dx = 0.3;
   puck.dy = 0.2;
   puck.size = 15;
-  // puck.color = "gold";
   puck.fill = "#333333";
 
   function handleInput(){
@@ -159,7 +158,10 @@ function GameWrapper(){
     var puckInBounds = puckColor > puck.fill;
     handleInput();
     if (puckInBounds){
+      puck.color = undefined;
       movePuck();
+    } else {
+      puck.color = "gold";
     }
     gameView.drawStats(puckInBounds, loopDelay);
   }
