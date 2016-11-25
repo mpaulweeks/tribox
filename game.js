@@ -9,15 +9,16 @@ function GameWrapper(){
   window.ctx = ctx; // todo debug
   canvas.height = height;
   canvas.width = width;
-  var playX = 0;
-  var playY = 0;
-  var playWidth = width;
-  var playHeight = height;
-  var boundX = playX + 100;
-  var boundY = playY + 100;
-  var boundWidth = playWidth - 200;
-  var boundHeight = playHeight - 200;
-  var backgroundColor = "#111111";
+  var playBox = {
+    x: 0,
+    y: 0,
+    width: width,
+    height: height,
+  };
+  var boundX = playBox.x + 100;
+  var boundY = playBox.y + 100;
+  var boundWidth = playBox.width - 200;
+  var boundHeight = playBox.height - 200;
   var loopDelay = 0;
 
   self.KEYS = {
@@ -66,113 +67,19 @@ function GameWrapper(){
   var mouse = Entity();
   mouse.color = "green";
   var puck = Entity();
-  puck.tx = playWidth/2;
-  puck.ty = playHeight/2;
+  puck.tx = playBox.width/2;
+  puck.ty = playBox.height/2;
   puck.dx = 2;
   puck.dy = 2;
   puck.size = 15;
   // puck.color = "gold";
   puck.fill = "#333333";
 
-  function rgbToHex(r, g, b){
-    // http://stackoverflow.com/a/6736135/6461842
-    if (r > 255 || g > 255 || b > 255)
-      throw "Invalid color component";
-    var number = ((r << 16) | (g << 8) | b).toString(16);
-    return "#" + ("000000" + number).slice(-6);
-  }
-  function drawDisc(disc){
-    ctx.beginPath();
-    ctx.arc(disc.x,disc.y,disc.size,0,2*Math.PI);
-    ctx.arc(disc.x,disc.y,disc.size-5,0,2*Math.PI);
-    if (disc.fill){
-      ctx.fillStyle = disc.fill;
-      ctx.fill();
-    }
-    if (disc.color){
-      ctx.fillStyle = disc.color;
-      ctx.fill("evenodd");
-    }
-  }
-  function drawLink(a, b){
-    ctx.strokeStyle = "#DDDDDD";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  }
-  function drawTriangle(a, b, c, fill){
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.lineTo(c.x, c.y);
-    ctx.lineTo(a.x, a.y);
-    ctx.fillStyle = fill;
-    ctx.fill();
-
-    var pixel = ctx.getImageData(puck.x, puck.y, 1, 1).data;
-    var color = rgbToHex(pixel[0], pixel[1], pixel[2]);
-
-    ctx.strokeStyle = "#DDDDDD";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
-    ctx.stroke();
-
-    return color;
-  }
-  function drawAll(){
-    var area = calcArea();
-    var max = 120000;
-    var min = 20000;
-    if (area > max) {
-      area = max;
-    } else if (area < min){
-      area = min;
-    }
-    var grad = Math.floor(200 * (1 - ((area - min) / (max - min))));
-    var color = rgbToHex(grad, grad, grad);
-
-    var puckColor = drawTriangle(hero, hero2, mouse, color);
-    drawDisc(hero);
-    drawDisc(hero2);
-    drawDisc(mouse);
-    drawDisc(puck);
-    return puckColor;
-  }
-
-  function calcDist(a, b){
-    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)); 
-  }
-  function calcArea(){
-    var e1 = calcDist(hero, hero2);
-    var e2 = calcDist(mouse, hero);
-    var e3 = calcDist(mouse, hero2);
-    var s = (e1 + e2 + e3)/2.0;
-    return Math.floor(Math.sqrt(s * (s - e1) * (s - e2) * (s - e3)));
-  }
-  function drawStats(puckColor){
-    var area = calcArea();
-    ctx.fillStyle = "white";
-    ctx.fillText(loopDelay, 10, 40);
-    ctx.fillText(area, 10, 50);
-    ctx.fillText(puckColor > puck.fill, 10, 60);
-  }
-
-  function clearCanvas(){
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(
-      playX, playY,
-      playWidth, playHeight
-    );
-  };
-
   function handleInput(){
-    var minX = playX;
-    var minY = playY;
-    var maxX = minX + playWidth;
-    var maxY = minY + playHeight;
+    var minX = playBox.x;
+    var minY = playBox.y;
+    var maxX = minX + playBox.width;
+    var maxY = minY + playBox.height;
 
     mouse.x = currentInput[self.KEYS.MX];
     mouse.y = currentInput[self.KEYS.MY];
@@ -238,12 +145,19 @@ function GameWrapper(){
     }
   }
 
+  self.ctx = ctx;
+  self.playBox = playBox;
+  self.hero = hero;
+  self.hero2 = hero2;
+  self.mouse = mouse;
+  self.puck = puck;
+  var gameView = GameView(self);
+
   self.step = function(){
-    clearCanvas();
     handleInput();
     movePuck();
-    var puckColor = drawAll();
-    drawStats(puckColor);
+    var puckColor = gameView.drawSpace();
+    gameView.drawStats(puckColor, loopDelay);
   }
 
   return self;
