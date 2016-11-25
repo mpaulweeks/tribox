@@ -2,18 +2,17 @@
 
 function GameLoop(gameWrapper){
   var self = {};
-  self.gameWrapper = gameWrapper;
 
-  var TIMEOUT_TARGET = 16; // 1000ms/30fps
+  var timeoutTarget = Math.floor(1000/gameWrapper.fps);
 
   self.run = function(){
     var start = new Date();
 
-    self.gameWrapper.step();
+    gameWrapper.step();
 
     var end = new Date();
     var msElapsed = end - start;
-    var delay = TIMEOUT_TARGET - msElapsed;
+    var delay = timeoutTarget - msElapsed - 1;
     gameWrapper.setDelay(delay);
     if (delay < 1){
       delay = 1;

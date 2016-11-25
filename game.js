@@ -2,6 +2,7 @@
 function GameWrapper(){
   var self = {};
 
+  self.fps = 60;
   var height = $(document).height() - 30;
   var width = $(document).width() - 30;
   var canvas = document.getElementById("game-canvas");
@@ -20,6 +21,29 @@ function GameWrapper(){
   var boundWidth = playBox.width - 200;
   var boundHeight = playBox.height - 200;
   var loopDelay = 0;
+  var timer = function(){
+    var tself = {};
+    tself.current = 0;
+    tself.best = 0;
+    var startDate = new Date();
+    var allTicks = 0;
+    tself.tick = function(){
+      tself.current += 1;
+    };
+    tself.ping = function(){
+      allTicks += 1;
+    }
+    tself.reset = function(){
+      if (tself.current > tself.best){
+        tself.best = tself.current;
+      }
+      tself.current = 0;
+    }
+    tself.fps = function(){
+      return Math.floor((1000 * allTicks) / (new Date() - startDate));
+    }
+    return tself;
+  }();
 
   self.KEYS = {
     MX: 'MOUSE_X',
@@ -54,7 +78,7 @@ function GameWrapper(){
       dx: 0,
       dy: 0,
       size: 20,
-      step: 5,
+      step: Math.floor(300/self.fps),
       color: undefined,
       fill: undefined,
     };
@@ -73,9 +97,9 @@ function GameWrapper(){
   var puck = Entity();
   puck.tx = playBox.width/2;
   puck.ty = playBox.height/2;
-  puck.dx = 0.3;
-  puck.dy = 0.2;
-  puck.size = 15;
+  puck.dx = puck.step/1.5;
+  puck.dy = puck.step/2.5;
+  puck.size = puck.size - 5;
   puck.fill = "#333333";
 
   function handleInput(){
@@ -128,6 +152,22 @@ function GameWrapper(){
     }
   }
 
+  function fixPuckSpeed(speed){
+    var secondsElapsed = timer.current / self.fps;
+    var minSpeed = 0.1 + (0.05 * secondsElapsed);
+    var maxSpeed = (puck.step * 0.5) + (0.05 * secondsElapsed);
+    var sign = speed / Math.abs(speed);
+    var positiveSpeed = Math.abs(speed);
+
+    if (positiveSpeed < minSpeed){
+      speed = sign * minSpeed;
+    } else if (positiveSpeed > maxSpeed){
+      speed = sign * maxSpeed;
+    }
+
+    return speed;
+  }
+
   function movePuck(){
     puck.tx += puck.dx;
     puck.ty += puck.dy;
@@ -161,13 +201,17 @@ function GameWrapper(){
         }
       }
     }
+    puck.dx = fixPuckSpeed(puck.dx);
+    puck.dy = fixPuckSpeed(puck.dy);
   }
 
   var gameView = GameView({
+    fps: self.fps,
     ctx: ctx,
     playBox: playBox,
     discs: [hero, hero2, mouse],
     puck: puck,
+    timer: timer,
   });
 
   self.step = function(){
@@ -177,9 +221,12 @@ function GameWrapper(){
     if (puckInBounds){
       puck.color = undefined;
       movePuck();
+      timer.tick();
     } else {
       puck.color = "gold";
+      timer.reset();
     }
+    timer.ping(); //debug
     gameView.drawStats(puckInBounds, loopDelay);
   }
 

@@ -4,6 +4,7 @@ function GameView(viewData){
   var playBox = viewData.playBox;
   var discs = viewData.discs;
   var puck = viewData.puck;
+  var timer = viewData.timer;
 
   var backgroundColor = "#111111";
 
@@ -90,6 +91,10 @@ function GameView(viewData){
     ctx.fillText(loopDelay, 10, 20);
     ctx.fillText(area, 10, 30);
     ctx.fillText(puckInBounds > puck.fill, 10, 40);
+    ctx.fillText(timer.current, 10, 50);
+    ctx.fillText(timer.best, 10, 60);
+    ctx.fillText(viewData.fps, 10, 70);
+    ctx.fillText(timer.fps(), 10, 80);
   }
   function clearCanvas(){
     ctx.fillStyle = backgroundColor;
